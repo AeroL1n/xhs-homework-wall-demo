@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>作业墙 · 种草笔记里的同题实践者 · 交互 demo</title>
+<style>
+:root{--red:#FF2442;--red-text:#C81E3A;--peer:#2B6A88;--peer-bg:#EEF5F8;--ink:#222;--ink2:#666;--ink3:#757575;--line:#EDEDED;--bg:#F6F6F6;
+--font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--ink);background:#E6E9EF;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+textarea,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #2A6CF0;outline-offset:2px}
+[hidden]{display:none!important}
+.stage{height:100%;display:flex;align-items:center;justify-content:center;gap:44px;padding:16px}
+.panel{width:340px;flex:none;max-height:100%;overflow:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 1px 2px rgba(20,30,50,.08),0 10px 28px rgba(20,30,50,.07)}
+.panel h1{font-size:17px;font-weight:700;line-height:1.3}
+.sub{font-size:12px;color:var(--ink3);margin-top:4px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#EEF0F3;border-radius:12px;padding:3px;margin:14px 0 12px}
+.seg button{min-height:40px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink2);transition:background .2s,color .2s}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.dia{position:relative;border-radius:16px;background:#F4F7F9;overflow:hidden}
+.dia svg{display:block;width:100%;height:auto}
+.lg{position:absolute;left:12px;bottom:9px;display:flex;gap:12px;font-size:12px;color:var(--ink2)}
+.lg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.cap{margin-top:12px;min-height:104px}
+.cap b{display:block;font-size:15px;line-height:1.35}
+.cap p{font-size:13px;line-height:1.6;color:var(--ink2);margin-top:4px}
+.trk{display:grid;grid-template-columns:repeat(3,1fr);margin:10px 0 12px;position:relative}
+.trk:before{content:"";position:absolute;left:16.6%;right:16.6%;top:13px;height:2px;background:#E8EAEE}
+.nd{position:relative;text-align:center;font-size:12px;color:var(--ink3);line-height:1.3}
+.nd i{display:grid;place-items:center;width:28px;height:28px;margin:0 auto 5px;border-radius:50%;background:#EEF0F3;font:600 13px var(--font);font-style:normal;color:var(--ink2);transition:background .3s,color .3s,transform .3s}
+.nd.done i{background:#CFE3EC;color:var(--peer)}
+.nd.on i{background:var(--peer);color:#fff;transform:scale(1.12)}
+.nd.on{color:var(--ink);font-weight:600}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+.btn{min-height:44px;border-radius:12px;background:#F0F1F4;font-size:14px;font-weight:600;transition:background .15s}
+.btn:hover{background:#E6E8EC}
+.btn[aria-pressed=true]{background:#222;color:#fff}
+.btn.pri{grid-column:1/-1;background:var(--red);color:#fff}
+.btn.pri:hover{background:#E81F3C}
+.note{font-size:12px;color:var(--ink3);line-height:1.65}
+.note summary{cursor:pointer;min-height:32px;display:flex;align-items:center;color:var(--ink2);font-weight:600}
+.note p{padding:2px 0 4px}
+.lead{font-size:13px;line-height:1.65;color:var(--ink2);margin-top:6px}
+.row2{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin:12px 0}
+.row2 .btn.pri{grid-column:auto}
+.nd small{display:block;font-size:12px;font-weight:400;color:var(--ink3)}
+.dia svg{max-width:270px;margin:0 auto}
+.cap{min-height:92px}
+.rp{position:absolute;right:10px;top:10px;min-height:32px;padding:0 12px;border-radius:16px;background:#fff;border:1px solid #CFE0E8;color:var(--peer);font-size:12px;font-weight:600}
+.rp:hover{background:#F4F9FB}
+.nar{margin:0 0 12px;min-height:66px;display:flex;align-items:center;padding:10px 12px;border-left:3px solid var(--peer);background:var(--peer-bg);border-radius:0 10px 10px 0;font-size:14px;font-weight:600;line-height:1.5;color:var(--peer);animation:slide .35s ease-out}
+.nar.idle{border-left-color:#D5D9E0;background:#F4F5F7;color:var(--ink2);font-weight:400;font-size:13px;animation:none}
+.aid{margin:0 0 6px}
+.aid summary{cursor:pointer;min-height:32px;display:flex;align-items:center;font-size:12px;color:var(--ink3)}
+.q .chip{min-height:28px;margin-left:8px;padding:0 10px;font-size:12px}
+.note b{color:var(--ink2);font-weight:600}
+.wrap{position:relative;flex:none}
+.wrap.auto .phone{pointer-events:none}
+@media(max-width:880px){body{overflow:auto}.stage{flex-direction:column;height:auto;min-height:100%;justify-content:flex-start}.panel{width:min(100%,420px);max-height:none}}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.phone{position:absolute;left:0;top:0;width:410px;height:864px;padding:10px;border-radius:58px;background:#15171C;box-shadow:0 36px 70px rgba(20,30,50,.3),0 0 0 2px #2A2E37 inset;transform-origin:0 0}
+.screen{position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:#fff;isolation:isolate;clip-path:inset(0 round 48px)}
+.island{position:absolute;top:11px;left:50%;width:112px;height:32px;margin-left:-56px;border-radius:16px;background:#000;z-index:90}
+.home{position:absolute;bottom:8px;left:50%;width:136px;height:5px;margin-left:-68px;border-radius:3px;background:#111;z-index:90;pointer-events:none}
+.sbar{position:absolute;top:0;left:0;right:0;height:52px;display:flex;justify-content:space-between;align-items:center;padding:8px 34px 0 38px;font:600 15px var(--font);background:#fff;z-index:20}
+.bat{width:25px;height:12px;border-radius:4px;border:1.5px solid #222;position:relative}
+.bat:after{content:"";position:absolute;top:1.5px;bottom:1.5px;left:1.5px;right:5px;border-radius:2px;background:#222}
+.nav{position:absolute;top:52px;left:0;right:0;height:48px;display:flex;align-items:center;gap:8px;padding:0 12px 0 6px;background:#fff;z-index:12;border-bottom:1px solid #F3F3F3}
+.ib{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:50%}
+.ib svg{width:22px;height:22px}
+.ib:disabled{opacity:.3;cursor:default}
+.av{flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:700}
+.nav .av{width:30px;height:30px;font-size:13px;background:#D98C7A}
+.nav .nm{flex:1;font-size:14px;font-weight:600}
+.fol{min-width:64px;height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--red);color:var(--red-text);font-size:13px;font-weight:600}
+.scroll{position:absolute;top:100px;bottom:62px;left:0;right:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:#fff}
+.scroll::-webkit-scrollbar{display:none}
+.cover{position:relative;height:390px;overflow:hidden;background:#EBD2BF}
+.cover svg{position:absolute;inset:0;width:100%;height:100%}
+.cover .cvt{position:absolute;left:20px;bottom:26px;color:#fff;text-shadow:0 1px 10px rgba(80,40,20,.55)}
+.cover .cvt b{display:block;font-size:30px;line-height:1.15;letter-spacing:1px}
+.cover .cvt span{font-size:14px;opacity:.95}
+.cover .pg{position:absolute;right:14px;top:12px;font-size:12px;color:#fff;background:rgba(0,0,0,.35);border-radius:10px;padding:2px 9px}
+.sw{position:absolute;right:16px;bottom:22px;display:flex;gap:6px}
+.sw i{width:26px;height:26px;border-radius:50%;border:2px solid #fff}
+.ttl{padding:14px 16px 0;font-size:17px;font-weight:700;line-height:1.45}
+.bd{padding:8px 16px 0;font-size:14.5px;line-height:1.7;color:#333}
+.bd p+p{margin-top:4px}
+.tg{padding:8px 16px 0;font-size:14px;color:var(--red-text);line-height:1.6}
+.mt{padding:8px 16px 14px;font-size:12px;color:var(--ink3)}
+.cmhd{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 8px;border-top:8px solid var(--bg);font-size:14px}
+.cmhd b{font-weight:600}
+.cmhd span{font-size:12px;color:var(--ink3)}
+.strip{display:flex;align-items:center;gap:12px;margin:0 12px 6px;padding:10px 12px;min-height:60px;border-radius:12px;background:var(--peer-bg);width:calc(100% - 24px);text-align:left;transition:background .4s}
+.strip:active{background:#E1EDF2}
+.stk{flex:none;display:flex;padding-left:8px}
+.stk .av{width:30px;height:30px;font-size:12px;margin-left:-9px;border:2px solid var(--peer-bg);position:relative}
+.stk .av.me{background:var(--red);z-index:2}
+.stk .av.me.hide{opacity:0}
+.stk .av.more{background:#fff;color:var(--peer);border-color:var(--peer-bg)}
+.stx{flex:1;min-width:0}
+.stx b{display:block;font-size:14px;line-height:1.35;color:var(--peer);font-weight:600}
+.stx span{display:block;font-size:12px;color:var(--ink2);margin-top:2px}
+.go{flex:none;font-size:13px;font-weight:600;color:var(--peer);white-space:nowrap}
+.strip.bump .stx b{animation:pop .6s ease-out}
+.strip.faded{background:#fff;min-height:40px;padding:6px 16px;margin-bottom:0;border-top:1px solid #F3F3F3}
+.strip.faded .stx b{font-size:13px;color:var(--ink2);font-weight:500}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.06);color:var(--red-text)}100%{transform:scale(1)}}
+.cm{display:flex;gap:10px;padding:10px 16px}
+.cm .av{width:34px;height:34px;font-size:14px}
+.cb{flex:1;min-width:0}
+.cn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)}
+.tag{display:inline-block;height:18px;line-height:16px;padding:0 6px;border:1px solid var(--peer);border-radius:4px;color:var(--peer);font-size:12px;white-space:nowrap}
+.ct{font-size:14.5px;line-height:1.55;margin-top:2px;word-break:break-all}
+.cimg{display:block;width:108px;height:108px;border-radius:8px;overflow:hidden;margin-top:6px;position:relative}
+.cimg svg{width:100%;height:100%;display:block}
+.cf{display:flex;gap:14px;font-size:12px;color:var(--ink3);margin-top:6px;align-items:center}
+.rep{margin-top:6px;padding:6px 10px;background:#F7F7F7;border-radius:8px;font-size:13px;color:var(--ink2);line-height:1.5}
+.ins{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;padding:7px 10px;border-radius:8px;background:var(--peer-bg);font-size:13px;color:var(--peer);line-height:1.4;animation:slide .35s ease-out}
+.ins button{min-height:32px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--peer);background:#fff;border:1px solid #BFD6E0}
+.ins button.p{background:var(--peer);color:#fff;border-color:var(--peer)}
+.ins.done{background:none;padding:2px 0;font-size:12px;color:var(--ink3);margin-top:4px}
+@keyframes slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.bar{position:absolute;left:0;right:0;bottom:0;height:62px;padding:8px 14px 18px;display:flex;align-items:center;gap:10px;background:#fff;border-top:1px solid #F0F0F0;z-index:12}
+.inp{flex:1;height:36px;border-radius:18px;background:#F5F5F5;text-align:left;padding:0 14px;font-size:14px;color:var(--ink3)}
+.bi{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--ink2);min-width:44px;min-height:44px;justify-content:center}
+.bi svg{width:22px;height:22px}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:30;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.scrim.on{opacity:1;visibility:visible}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:31;background:#fff;border-radius:20px 20px 0 0;padding:6px 16px 28px;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:700px;overflow-y:auto}
+.sheet.on{transform:none}
+.sh{display:flex;align-items:center;justify-content:space-between;height:48px}
+.sh b{font-size:16px}
+.sh .x{width:44px;height:44px;margin-left:-12px;font-size:26px;color:var(--ink2)}
+.snd{min-width:64px;height:34px;border-radius:17px;background:var(--red);color:#fff;font-size:14px;font-weight:600}
+.snd:disabled{background:#F0F0F0;color:#B0B0B0;cursor:default}
+.ta{display:block;width:100%;min-height:76px;border:0;resize:none;outline:0;font-size:15px;line-height:1.55;padding:4px 0}
+.qf{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+.chip{min-height:32px;padding:0 12px;border-radius:16px;background:#F5F5F5;font-size:13px;color:var(--ink2);border:1px solid transparent;transition:background .15s}
+.chip[aria-pressed=true]{background:var(--peer-bg);border-color:var(--peer);color:var(--peer);font-weight:600}
+.lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;margin:8px 0 8px}
+.lbl span{font-size:12px;font-weight:400;color:var(--ink3)}
+.ph{display:flex;gap:8px}
+.pt{position:relative;width:78px;height:78px;border-radius:10px;overflow:hidden;border:2px solid transparent;flex:none}
+.pt svg{width:100%;height:100%;display:block}
+.pt.on{border-color:var(--red)}
+.pt.on:after{content:"\2713";position:absolute;right:4px;top:4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;line-height:18px;text-align:center}
+.more{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin-top:8px;font-size:14px;color:var(--ink2);text-align:left}
+.more:after{content:"\203A";font-size:20px;transition:transform .2s;transform:rotate(90deg)}
+.more[aria-expanded=true]:after{transform:rotate(-90deg)}
+.opt{padding:2px 0 4px}
+.opt .g{margin-bottom:8px}
+.opt .g small{display:block;font-size:12px;color:var(--ink3);margin-bottom:6px}
+.opt .chips{display:flex;flex-wrap:wrap;gap:6px}
+.page{position:absolute;inset:52px 0 0 0;z-index:40;background:var(--bg);overflow:hidden;border-radius:0 0 48px 48px;transform:translateX(102%);visibility:hidden;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility .32s;display:flex;flex-direction:column}
+.page.on{transform:none;visibility:visible}
+.ph2{flex:none;display:flex;align-items:center;height:48px;padding:0 8px 0 4px;background:#fff}
+.ph2 b{flex:1;text-align:center;font-size:16px}
+.ph2 .act{min-width:64px;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--red);color:var(--red-text);font-size:13px;font-weight:600}
+.ph2 .sp{width:44px}
+.orig{flex:none;display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border-top:1px solid #F3F3F3;width:100%;text-align:left}
+.orig .th{flex:none;width:36px;height:36px;border-radius:6px;overflow:hidden}
+.orig .th svg{width:100%;height:100%;display:block}
+.orig span{flex:1;min-width:0;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orig em{font-style:normal;font-size:12px;color:var(--peer);border:1px solid var(--peer);border-radius:4px;padding:0 5px}
+.fl{flex:none;display:flex;gap:8px;padding:10px 14px;background:#fff;overflow-x:auto;scrollbar-width:none}
+.fl::-webkit-scrollbar{display:none}
+.fl .chip{flex:none}
+.pbody{flex:1;overflow-y:auto;scrollbar-width:none;padding:10px 10px 90px}
+.pbody::-webkit-scrollbar{display:none}
+.mas{display:flex;gap:8px;align-items:flex-start}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.wc{display:block;width:100%;text-align:left;background:#fff;border-radius:10px;overflow:hidden;position:relative}
+.wc .im{display:block;width:100%;overflow:hidden}
+.wc .im svg{display:block;width:100%;height:100%}
+.wc .tx{padding:8px 10px 0;font-size:14px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wc .cd{display:block;padding:4px 10px 0;font-size:12px;color:var(--peer)}
+.wc .ft{display:flex;align-items:center;gap:6px;padding:8px 10px 10px;font-size:12px;color:var(--ink2)}
+.wc .ft .av{width:20px;height:20px;font-size:10px}
+.wc .ft span:not(.av){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wc .ft em{font-style:normal;color:var(--ink3)}
+.wc .mine{position:absolute;left:8px;top:8px;background:var(--red);color:#fff;font-size:12px;padding:0 7px;height:20px;line-height:20px;border-radius:10px}
+.empty{padding:40px 24px;text-align:center;font-size:13px;color:var(--ink3);line-height:1.7}
+.fnote{padding:14px 8px 0;text-align:center;font-size:12px;color:var(--ink3);line-height:1.6}
+.dsw{flex:none;display:flex;align-items:center;gap:8px;padding:10px 14px 4px;background:#fff}
+.dsw .av{width:30px;height:30px;font-size:12px}
+.dsw .who{flex:1;min-width:0}
+.dsw .who b{display:flex;align-items:center;gap:6px;font-size:14px}
+.dsw .who small{display:block;font-size:12px;color:var(--peer);margin-top:1px}
+.dimg{position:relative;height:340px;background:#EEE;overflow:hidden;user-select:none}
+.dimg svg{position:absolute;inset:0;width:100%;height:100%}
+.dimg .top{position:absolute;inset:0;clip-path:inset(0 50% 0 0)}
+.dimg .hd{position:absolute;top:0;bottom:0;left:50%;width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.3)}
+.dimg .hd:after{content:"\2194";position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px;border-radius:50%;background:#fff;color:var(--ink);font-size:16px;line-height:30px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.3)}
+.dimg input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize}
+.dimg .lb{position:absolute;bottom:10px;font-size:12px;color:#fff;background:rgba(0,0,0,.4);padding:1px 8px;border-radius:10px}
+.seg2{display:flex;gap:6px;padding:10px 14px;background:#fff}
+.blk{background:#fff;padding:12px 16px;margin-top:8px}
+.blk h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.blk p{font-size:14px;line-height:1.6;color:#333}
+.qs .q{padding:8px 0;font-size:14px;line-height:1.55}
+.qs .q small{display:block;font-size:12px;color:var(--ink3)}
+.qs .a{margin-top:4px;padding:6px 10px;background:#F7F7F7;border-radius:8px;font-size:13px;color:var(--ink2)}
+.pill{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.dbar{position:absolute;left:0;right:0;bottom:0;padding:8px 14px 22px;background:#fff;border-top:1px solid #F0F0F0;display:flex;gap:8px;align-items:center}
+.dbar input{flex:1;height:38px;border-radius:19px;border:0;background:#F5F5F5;padding:0 14px;font-size:14px;outline-offset:1px}
+.dbar .snd{height:38px}
+.fly{position:absolute;z-index:70;width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;pointer-events:none;box-shadow:0 4px 14px rgba(255,36,66,.5)}
+.toast{position:absolute;left:50%;bottom:92px;transform:translate(-50%,12px);z-index:60;background:rgba(34,34,34,.92);color:#fff;font-size:13px;line-height:1.45;padding:9px 14px;border-radius:10px;max-width:300px;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+#dg .cl{stroke:#C9CED6;stroke-width:1;opacity:.75;transition:opacity .6s,stroke .6s}
+#dg .rg{fill:none;stroke:var(--peer);stroke-width:1.8;stroke-linejoin:round;opacity:0;transition:opacity .6s}
+#dg .tl{font-size:11px;fill:#8A8F99}
+#dg .nd2 circle{transition:fill .5s,stroke .5s}
+#dg .nd2.r circle,#dg .nd2.p circle{fill:#B9BEC8}
+#dg.w .nd2.p circle{fill:var(--peer)}
+#dg .nd2.me circle{fill:#fff;stroke:var(--red);stroke-width:2.5}
+#dg.j .nd2.me circle{fill:var(--red);stroke:#fff}
+#dg .ml{font-size:11px;font-weight:700;fill:var(--red-text)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 4l2.5 5.2 5.6.8-4 4 1 5.6L12 17l-5.1 2.6 1-5.6-4-4 5.6-.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 011 1v9a1 1 0 01-1 1h-7l-4 3.5V16H5a1 1 0 01-1-1V6a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+</defs></svg>
+<div class="stage">
+<aside class="panel" aria-label="演示控制与关系视图">
+<h1>作业墙：让陌生读者变成同伴</h1>
+<p class="lead">在种草笔记的评论区，把「跟着做过」的人归到一起。大家不用加好友，只因为做了同一件事，就能互相参考、追问细节。</p>
+<div class="row2"><button class="btn pri" id="auto">看 30 秒演示</button><button class="btn" id="try">自己试试</button></div>
+<div class="nar idle" id="nar" aria-live="polite">也可以自己玩：在右侧评论区发一张成果图，看下面的关系怎么变</div>
+<div class="dia"><svg id="dg" viewBox="0 0 300 300" role="img" aria-label="关系视图：读者与笔记、读者之间的连线"></svg>
+<button class="rp" id="rp">回看互动前</button>
+<div class="lg"><span><i style="background:#B9BEC8"></i>读者</span><span><i style="background:var(--peer)"></i>同题实践者</span><span><i style="background:var(--red)"></i>我</span></div></div>
+<div class="cap" aria-live="polite"><b id="capT"></b><p id="capD"></p></div>
+<div class="trk" id="trk"><div class="nd"><i>1</i>圈外读者<small>互动前</small></div><div class="nd"><i>2</i>发出作业<small>&nbsp;</small></div><div class="nd"><i>3</i>同题实践者<small>互动后</small></div></div>
+<div class="ctl"><button class="btn" id="fade" aria-pressed="false">模拟 14 天后</button><button class="btn" id="rst">重置</button></div>
+<details class="note"><summary>说明：术语与识别规则</summary>
+<p><b>作业</b>：跟着原笔记做完后，在评论区发的成果图、心得或踩坑。<br><b>同题实践者</b>：在同一条笔记下交过作业的人，只在这条笔记里成立，不加好友，不进主页。<br><b>识别规则（演示用）</b>：带图且写了「做了、试了、跟着、复刻、踩坑」，直接入墙；只有图，先问你；没有图，当普通评论。<br>关系视图里只画了 10 位，真实数字是 126 位。示例笔记与人物、图片均为虚构。</p></details>
+</aside>
+<div class="wrap" id="wrap"><div class="phone" id="phone"><div class="screen" id="screen">
+<div class="island"></div>
+<div class="sbar"><span>9:41</span><span class="bat"></span></div>
+<div class="nav"><button class="ib" aria-label="返回"><svg><use href="#i-back"/></svg></button><span class="av">梨</span><span class="nm">小梨Lili</span><button class="fol">关注</button></div>
+<div class="scroll" id="scroll">
+<div class="cover" id="cover"></div>
+<div class="ttl">秋日奶茶眼妆｜三步搞定，通勤不显肿</div>
+<div class="bd"><p>第一步，03 暖棕大面积扫上眼睑打底。</p><p>第二步，05 焦糖只放在眼尾三分之一，晕开。</p><p>第三步，眼头点一点细闪，眼线笔顺着睫毛根画到眼尾。</p></div>
+<div class="tg">#奶茶眼妆 #通勤妆 #秋季妆容</div>
+<div class="mt">编辑于 10-28 上海</div>
+<div class="cmhd" id="cmhd"><b id="cmc">共 212 条评论</b><span>最新</span></div>
+<div id="stripSlot"></div>
+<div id="cmts"></div>
+<div style="padding:18px;text-align:center;font-size:12px;color:#B0B0B0">到底了</div>
+</div>
+<div class="bar"><button class="inp" id="inp">说点什么...</button><span class="bi"><svg><use href="#i-heart"/></svg>2.1万</span><span class="bi"><svg><use href="#i-star"/></svg>8932</span><span class="bi"><svg><use href="#i-chat"/></svg><span id="bc">212</span></span></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="发评论" aria-modal="true">
+<div class="sh"><button class="x" id="shx" aria-label="关闭">×</button><b id="shT">发评论</b><button class="snd" id="snd" disabled>发送</button></div>
+<textarea class="ta" id="ta" placeholder="说点什么..." aria-label="评论内容"></textarea>
+<details class="aid"><summary>演示辅助：一键填入示例文案</summary><div class="qf" id="qf"></div></details>
+<div class="lbl">图片<span id="phh">只拍眼妆或唇妆局部也可以</span></div>
+<div class="ph" id="ph"></div>
+<div class="qf" style="margin-top:8px"><button class="chip" id="crop" aria-pressed="false">只发局部</button></div>
+<button class="more" id="more" aria-expanded="false">补充作业信息（选填）</button>
+<div class="opt" id="opt" hidden>
+<div class="g"><small>我用的色号</small><div class="chips" id="gCol"></div></div>
+<div class="g"><small>我的条件，用于「和我相近」筛选</small><div class="chips" id="gCond"></div></div>
+</div>
+</div>
+<div class="page" id="wall">
+<div class="ph2"><button class="ib" id="wBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><b id="wTitle">作业墙</b><button class="act" id="wHw">交作业</button></div>
+<button class="orig" id="orig"><div class="th" id="oth"></div><span>秋日奶茶眼妆｜三步搞定，通勤不显肿</span><em>原作</em></button>
+<div class="fl" id="fl"></div>
+<div class="pbody" id="wBody"><div class="mas"><div class="col" id="col1"></div><div class="col" id="col2"></div></div><div class="fnote">按信息完整度和时间排列，不显示点赞数</div></div>
+</div>
+<div class="page" id="dtl">
+<div class="ph2"><button class="ib" id="dBack" aria-label="返回作业墙"><svg><use href="#i-back"/></svg></button><b id="dTitle">作业</b><button class="ib" id="dPrev" aria-label="上一份"><svg><use href="#i-back"/></svg></button><button class="ib" id="dNext" aria-label="下一份"><svg style="transform:scaleX(-1)"><use href="#i-back"/></svg></button></div>
+<div class="pbody" id="dBody" style="padding:0 0 100px"></div>
+<div class="dbar"><input id="qIn" placeholder="针对这份作业问一句" aria-label="复刻追问"><button class="snd" id="qSnd" disabled>发送</button></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="home"></div>
+</div></div></div>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* 眼妆插画：[肤色, 肤色2, 眼影1, 眼影2, 闪片, 眼线, 眉色, 眼尾上扬] */
+const PAL=[
+['#F4D8C4','#EDC4A8','#CFA27A','#8E5C3B','#F5DDB0','#33231C','#6B4A38',1],
+['#F5DCCB','#EBC3A8','#D1A079','#96653F','#F2D8A8','#3A2A22','#6A4A38',1],
+['#E9C3A5','#DDAE8C','#C98E5E','#8A5330','#F0CF98','#2F211A','#5C4030',0],
+['#F7E1D3','#EFCDB8','#D6A98A','#A06F52','#F7E4C2','#4A3228','#7A5A48',0],
+['#D9A988','#C9916F','#C48A6E','#855443','#E8B79A','#2A1C16','#4E3426',1],
+['#F1D3BC','#E4BCA0','#CDA07A','#946142','#F0D4A6','#35261E','#66483A',0],
+['#F6DDCC','#ECC8B0','#D8A777','#A66B3D','#FBE6B8','#3A2A22','#6D4E3C',1],
+['#E5BEA2','#D6A688','#B8865C','#7B4F34','#E9C79A','#2D1F18','#55392C',0],
+['#EFCBB2','#E1B499','#D09A74','#8F5A3A','#F1D2A4','#31241C','#60443A',1],
+['#C99575','#B98162','#C48A6E','#8A5848','#E2AA90','#241711','#43302A',1],
+['#F3D6C2','#E8BFA3','#D0A07A','#92603E','#F4DCAE','#35261E','#684A38',1],
+['#EAC5AA','#DDB093','#C98F66','#8B5632','#F0D09A','#2F211A','#5E4132',0],
+['#F6DFD0','#EDCBB5','#D4A58A','#9E6F55','#F7E3C0','#4A3228','#7A5A48',1]];
+let uid=0;
+function eye(i,crop){
+const [sk,sk2,l1,l2,gl,ln,br,wg]=PAL[i],k=++uid,vb=crop?'44 58 112 112':'0 0 200 200';
+return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${l1}"/><stop offset="1" stop-color="${l2}"/></linearGradient><linearGradient id="s${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sk}"/><stop offset="1" stop-color="${sk2}"/></linearGradient><clipPath id="c${k}"><path d="M34 118Q100 78 168 112Q100 140 34 118Z"/></clipPath></defs>
+<rect width="200" height="200" fill="url(#s${k})"/>
+<path d="M28 62Q100 28 176 56" fill="none" stroke="${br}" stroke-width="7" stroke-linecap="round" opacity=".75"/>
+<path d="M34 118Q100 44 168 108Q100 76 34 118Z" fill="url(#g${k})"/>
+<ellipse cx="92" cy="94" rx="24" ry="7" fill="${gl}" opacity=".8" transform="rotate(-8 92 94)"/>
+<path d="M34 118Q100 78 168 112Q100 140 34 118Z" fill="#FBF5F1"/>
+<g clip-path="url(#c${k})"><circle cx="100" cy="110" r="14" fill="#4A3426"/><circle cx="100" cy="110" r="6" fill="#1E1410"/><circle cx="105" cy="105" r="3" fill="#fff"/></g>
+<path d="M34 118Q100 78 168 112" fill="none" stroke="${ln}" stroke-width="3.4" stroke-linecap="round"/>
+<path d="M168 112L${wg?186:176} ${wg?100:108}" stroke="${ln}" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M46 124Q100 142 158 118" fill="none" stroke="${l2}" stroke-width="2.2" stroke-linecap="round" opacity=".55"/></svg>`}
+/* 作业数据（虚构） */
+const W=[
+{n:'阿柚',c:'#E8836B',p:1,tg:['混油皮','双眼皮'],col:'03 暖棕',q:'跟着做了，眼尾拉长一点更显精神。',use:'03 暖棕打底，05 焦糖提亮眼头，棕色眼线笔。',pit:'',h:150,qa:[{t:'眼尾拉多长合适？',a:'到眼角延长线 3mm 就够，再长会显凶。'}]},
+{n:'栗子不吃糖',c:'#C27B9A',p:2,tg:['干皮','单眼皮'],col:'05 焦糖',q:'肿眼泡的话，打底要薄，不然会卡进褶皱。',use:'05 焦糖，先用散粉定妆再扫眼影。',pit:'第一次直接厚涂，一小时后卡粉。改成薄涂两层，当天没再卡。',h:190,qa:[{t:'散粉用的哪一款？',a:'透明的就行，只按压眼皮，不要扫。'}]},
+{n:'周周要早睡',c:'#6BA3A0',p:3,tg:['混油皮','内双'],col:'',q:'通勤版，只用两个色，三分钟出门。',use:'一盘里最浅的两个色，一支细头眼线。',pit:'',h:140,qa:[]},
+{n:'一只小满',c:'#7A8CC2',p:4,tg:['干皮','双眼皮'],col:'07 豆沙',q:'换成 07 豆沙，比原作偏粉，秋天也好看。',use:'07 豆沙代替 05，其余照做。',pit:'豆沙色在暖光下会偏粉，拍照要开自然光。',h:165,qa:[]},
+{n:'Momo酱',c:'#D9A441',p:5,tg:['混油皮','单眼皮'],col:'03 暖棕',q:'单眼皮要睁着眼定位，重点放在眼睑中间。',use:'03 暖棕，睁眼状态下定位。',pit:'闭着眼画，睁开后颜色全被遮住，白画了。',h:195,qa:[{t:'睁着眼怎么画不容易手抖？',a:'手肘撑在桌上，小指轻靠脸颊。'},{t:'需要贴双眼皮贴吗？',a:'我没贴，只是把颜色往上推了一点。'}]},
+{n:'林栖',c:'#5C8A5A',p:6,tg:['混油皮','双眼皮'],col:'',q:'闪片只点在眼中央，办公室灯光下刚好。',use:'05 焦糖加一点细闪，用无名指点。',pit:'',h:135,qa:[]},
+{n:'小鹿不迷路',c:'#B66A52',p:7,tg:['干皮','内双'],col:'03 暖棕',q:'我换了棕色睫毛膏，比黑色柔和。',use:'03 暖棕，棕色睫毛膏。',pit:'睫毛膏刷多了会结块，两层就够。',h:150,qa:[]},
+{n:'橘子汽水',c:'#E59A3A',p:8,tg:['混油皮','单眼皮'],col:'05 焦糖',q:'眼尾上扬的画法，我试了三次才找到角度。',use:'05 焦糖，防水眼线笔。',pit:'普通眼线笔下午会晕。换成防水款后不再晕。',h:175,qa:[{t:'上扬角度是怎么定的？',a:'顺着下眼睑末端往太阳穴方向延长。'}]},
+{n:'时雨',c:'#8E6FB5',p:9,tg:['干皮','双眼皮'],col:'07 豆沙',q:'通勤一整天没脱，下班还在。',use:'07 豆沙，先上眼部打底。',pit:'',h:145,qa:[]}];
+/* 评论区初始内容：w 为作业序号，其余是普通评论 */
+const C0=[
+{w:0,t:'跟着做了！眼尾拉长一点更显精神',like:86,tm:'3小时前'},
+{n:'小满姐姐',c:'#7A8CC2',t:'求问眼影盘是哪款呀',like:12,tm:'5小时前',rep:'小梨Lili：就是 03 和 05 那一盘，主页有链接'},
+{n:'星野',c:'#6B9AC4',t:'已收藏，周末试试',like:4,tm:'6小时前'},
+{w:1,t:'试了，肿眼泡打底要薄一点，不然会卡粉',like:41,tm:'昨天'},
+{n:'Yuki',c:'#C98BB0',t:'好好看，求教程！',like:2,tm:'昨天'},
+{w:2,t:'通勤版三分钟，出门前刚好',like:19,tm:'昨天'}];
+const QF_W=['跟着做了，眼尾拉长一点更好看','试了，打底太厚会卡粉','复刻成功，通勤刚好'];
+const QF_P=['好看，已收藏','这是哪款眼影盘？'];
+const COLS=['03 暖棕','05 焦糖','07 豆沙'],CONDS=['混油皮','干皮','单眼皮','双眼皮'];
+const BASE=126;
+/* 全局状态 */
+const S={mode:'wall',iso:true,joined:false,ask:false,faded:false,mine:null,cond:[],col:'',filter:'all',cur:0,list:[],view:'work',hw:false,img:-1,crop:false,ringOrder:[]};
+/* 关系视图：16 个点，0-8 是已交作业的人，9-14 是只读不交的读者，15 是“我” */
+const NS='http://www.w3.org/2000/svg',dg=$('#dg'),CX=150,CY=150,R=80;
+const SC=[[40,38],[262,28],[274,112],[272,214],[198,274],[104,274],[30,240],[20,96],[150,284],[70,70],[232,64],[262,160],[150,26],[48,206],[230,246],[28,150]];
+const nodes=SC.map((p,i)=>({i,x:p[0],y:p[1],tx:p[0],ty:p[1],role:i<9?'p':i<15?'r':'me'}));
+function el(t,a,par){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(par||dg).appendChild(e);return e}
+const cl=nodes.map(n=>el('line',{x1:CX,y1:CY,x2:n.x,y2:n.y,class:'cl'}));
+const ring=el('path',{class:'rg',d:''});
+const ctr=el('g',{transform:`translate(${CX-20} ${CY-26})`});
+el('rect',{width:40,height:52,rx:8,fill:'#fff',stroke:'#C9CED6','stroke-width':1.5},ctr);
+[['#CFA27A',12],['#8E5C3B',24],['#F5DDB0',36]].forEach(([c,y])=>el('rect',{x:8,y:y-4,width:24,height:7,rx:3.5,fill:c},ctr));
+el('text',{x:CX,y:CY+44,'text-anchor':'middle',class:'tl'}).textContent='笔记';
+const ng=nodes.map(n=>{const g=el('g',{class:'nd2 '+n.role});el('circle',{r:n.role==='me'?7.5:6.5},g);if(n.role==='me')el('text',{x:11,y:-9,class:'ml'},g).textContent='我';return g});
+let raf=0;
+function draw(){
+nodes.forEach((n,i)=>{ng[i].setAttribute('transform',`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)})`);cl[i].setAttribute('x2',n.x.toFixed(1));cl[i].setAttribute('y2',n.y.toFixed(1))});
+const o=S.ringOrder;ring.setAttribute('d',o.length?o.map((id,k)=>(k?'L':'M')+nodes[id].x.toFixed(1)+' '+nodes[id].y.toFixed(1)).join('')+'Z':'')}
+function tick(){let mv=0;for(const n of nodes){const dx=n.tx-n.x,dy=n.ty-n.y;if(Math.abs(dx)+Math.abs(dy)>.4){n.x+=dx*.12;n.y+=dy*.12;mv=1}else{n.x=n.tx;n.y=n.ty}}draw();raf=mv?requestAnimationFrame(tick):0}
+function run(){if(RM){nodes.forEach(n=>{n.x=n.tx;n.y=n.ty});draw();return}if(!raf)raf=requestAnimationFrame(tick)}
+function pulse(){if(RM)return;const m=nodes[15],c=el('circle',{cx:m.x,cy:m.y,r:8,fill:'none',stroke:'#FF2442','stroke-width':2});c.style.transformOrigin=m.x+'px '+m.y+'px';c.animate([{transform:'scale(1)',opacity:.8},{transform:'scale(5)',opacity:0}],{duration:900,easing:'ease-out'}).onfinish=()=>c.remove()}
+const CAP={
+before:['互动前：每个人只和笔记相连','几百人同时在看这条笔记，彼此不知道对方也想试。做了的人把成果发在评论里，被闲聊淹没，别人既看不出来，也无从参考。'],
+out:['互动后：做了同一件事的人连成一圈','已有 126 位读者交了作业，他们彼此可见、可以互相参考。你还在圈外：没有连接，也没有负担。去评论区发一张成果图。'],
+ask:['等你确认','系统认为这张图可能是作业，但没有把握，所以先问你一句，不会擅自把你放进作业墙。'],
+joined:['你成了同题实践者','你和另外 126 位同伴一起做了这个妆。没有加好友，没有同伴列表，这层关系只在这条笔记里成立。'],
+faded:['14 天后：关系自然消散','没有新作业，入口条降为一行文字，圈子散开。离开笔记后，不留任何列表、提醒或好友关系。']};
+function capKey(){return S.iso?'before':S.faded?'faded':S.joined?'joined':S.ask?'ask':'out'}
+function layout(){
+const wall=!S.iso&&!S.faded,joined=wall&&S.joined;
+let order=[];if(wall){order=[0,1,2,3,4,5,6,7,8];if(joined)order.splice(7,0,15)}
+nodes.forEach(n=>{n.tx=SC[n.i][0];n.ty=SC[n.i][1]});
+order.forEach((id,k)=>{const a=-Math.PI/2+2*Math.PI*k/order.length;nodes[id].tx=CX+R*Math.cos(a);nodes[id].ty=CY+R*Math.sin(a)});
+if(order.length)S.ringOrder=order;
+dg.classList.toggle('w',wall);dg.classList.toggle('j',joined);
+ring.style.opacity=wall?1:0;
+cl.forEach((l,i)=>{const inR=order.includes(i);l.style.opacity=S.faded&&!S.iso?.3:inR?.22:.75;l.style.stroke=inR?'#2B6A88':'#C9CED6';l.style.strokeDasharray=S.faded&&!S.iso?'2 3':'none'});
+const k=capKey();$('#capT').textContent=CAP[k][0];$('#capD').textContent=CAP[k][1];
+const idx=k==='joined'?2:k==='ask'?1:0;
+[...$('#trk').children].forEach((e,i)=>{e.className='nd'+(i<idx?' done':i===idx?' on':'')});
+$('#fade').setAttribute('aria-pressed',S.faded);run()}
+/* 评论区与入口条 */
+S.cm=C0.map(x=>({...x}));
+let tt=0;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2400)}
+function insHTML(c){
+if(!c.mine||S.mode!=='wall'||!c.ins)return'';
+if(c.ins==='in')return'<div class="ins"><span>已归入作业墙</span><button data-act="undo">撤回</button></div>';
+if(c.ins==='ask')return'<div class="ins"><span>这是你的作业吗？</span><button class="p" data-act="accept">加入作业墙</button><button data-act="decline">不用</button></div>';
+return'<div class="ins done">已归入作业墙</div>'}
+function cmHTML(c){
+const w=c.w!=null?W[c.w]:null,nm=w?w.n:c.n,col=w?w.c:c.c,img=w?w.p:c.img;
+const isW=S.mode==='wall'&&(w||(c.mine&&c.work));
+const pic=img>=0?(isW?`<button class="cimg" data-act="work" data-i="${c.mine?'m':c.w}" aria-label="查看这份作业">${eye(img,c.crop)}</button>`:`<div class="cimg">${eye(img,c.crop)}</div>`):'';
+return`<div class="cm${c.mine?' mine':''}"><span class="av" style="background:${col}">${esc(nm[0])}</span><div class="cb"><div class="cn">${esc(nm)}${isW?'<span class="tag">同题实践者</span>':''}</div>${c.t?`<div class="ct">${esc(c.t)}</div>`:''}${pic}${c.rep?`<div class="rep">${esc(c.rep)}</div>`:''}${insHTML(c)}<div class="cf"><span>${c.tm}</span><span>赞 ${c.like}</span><span>回复</span></div></div></div>`}
+function cmts(){
+$('#cmts').innerHTML=S.cm.map(cmHTML).join('');
+const n=212+S.cm.length-C0.length;$('#cmc').textContent='共 '+n+' 条评论';$('#bc').textContent=n}
+function strip(){
+const slot=$('#stripSlot');
+if(S.mode!=='wall'){slot.innerHTML='';return}
+const n=BASE+(S.joined?1:0);
+if(S.faded){slot.innerHTML=`<button class="strip faded" data-act="wall"><span class="stx"><b>${n} 份作业 ›</b></span></button>`;return}
+const avs=W.slice(0,3).map(w=>`<span class="av" style="background:${w.c}">${w.n[0]}</span>`).join('');
+slot.innerHTML=`<button class="strip" data-act="wall" aria-label="打开作业墙"><span class="stk">${S.joined?'<span class="av me hide" id="meAv">我</span>':''}${avs}</span><span class="stx"><b>${S.joined?'你和另外 '+BASE+' 位同伴一起做了这个妆':BASE+' 位同伴跟着做了这个妆'}</b><span>近 7 天新增 ${18+(S.joined?1:0)} 份作业</span></span><span class="go">看作业墙 ›</span></button>`}
+function refresh(){strip();cmts();layout()}
+/* 发评论 / 交作业 */
+function buildCompose(){
+$('#qf').innerHTML=[...QF_W,...QF_P].map(t=>`<button class="chip" data-q="${esc(t)}">${esc(t)}</button>`).join('');
+$('#ph').innerHTML=[0,1,2].map(k=>`<button class="pt${S.img===k?' on':''}" data-k="${k}" aria-label="图片 ${k+1}" aria-pressed="${S.img===k}">${eye(10+k,S.crop)}</button>`).join('');
+$('#crop').setAttribute('aria-pressed',S.crop);
+$('#gCol').innerHTML=COLS.map(c=>`<button class="chip" aria-pressed="${S.col===c}" data-c="${c}">${c}</button>`).join('');
+$('#gCond').innerHTML=CONDS.map(c=>`<button class="chip" aria-pressed="${S.cond.includes(c)}" data-d="${c}">${c}</button>`).join('');
+checkSnd()}
+function checkSnd(){const ok=S.hw?S.img>=0:($('#ta').value.trim()||S.img>=0);$('#snd').disabled=!ok}
+function openCompose(hw){
+S.hw=!!hw;S.img=-1;S.crop=false;
+$('#ta').value='';$('#ta').placeholder=hw?'一句话说说你的复刻心得（选填）':'说点什么...';
+$('#shT').textContent=hw?'交作业':'发评论';
+$('#phh').textContent=hw?'必选，只拍眼妆或唇妆局部也可以':'只拍眼妆或唇妆局部也可以';
+$('#more').setAttribute('aria-expanded',false);$('#opt').hidden=true;
+buildCompose();$('#scrim').classList.add('on');$('#sheet').classList.add('on')}
+function closeCompose(){$('#scrim').classList.remove('on');$('#sheet').classList.remove('on')}
+function fly(from,to){return new Promise(res=>{
+if(RM||!from||!to){res();return}
+const sc=$('#screen').getBoundingClientRect(),k=sc.width/390,a=from.getBoundingClientRect(),b=to.getBoundingClientRect();
+const ax=(a.left-sc.left)/k,ay=(a.top-sc.top)/k,bx=(b.left-sc.left)/k,by=(b.top-sc.top)/k;
+const f=document.createElement('span');f.className='fly';f.textContent='我';f.style.left=ax+'px';f.style.top=ay+'px';$('#screen').appendChild(f);
+const an=f.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${(bx-ax)/2}px,${(by-ay)/2-30}px) scale(1.35)`,offset:.5},{transform:`translate(${bx-ax}px,${by-ay}px) scale(.9)`}],{duration:720,easing:'cubic-bezier(.5,0,.2,1)'});
+an.onfinish=()=>{f.remove();res()}})}
+async function join(){
+S.joined=true;S.ask=false;S.faded=false;if(S.mine)S.mine.work=true;strip();cmts();layout();
+await fly(document.querySelector('.cm.mine .av'),$('#meAv'));
+const m=$('#meAv');if(m)m.classList.remove('hide');
+const s=document.querySelector('.strip');if(s)s.classList.add('bump');
+setTimeout(pulse,RM?0:350);
+setTimeout(()=>{if(S.mine&&S.mine.ins==='in'){S.mine.ins='done';cmts()}},6000)}
+function undo(){
+S.joined=false;S.ask=false;if(S.mine){S.mine.work=false;S.mine.ins=null}S.mine=null;
+refresh();toast('已撤回，评论仍然保留')}
+function send(){
+const t=$('#ta').value.trim(),has=S.img>=0;
+if(!t&&!has)return;
+const c={mine:1,n:'我',c:'#FF2442',t,img:has?10+S.img:-1,crop:S.crop,work:false,ins:null,like:0,tm:'刚刚'};
+const kw=/做了|试了|跟着|复刻|踩坑|打卡/.test(t);
+closeCompose();
+S.cm.unshift(c);
+const level=S.mode==='wall'&&has?(kw||S.hw?'high':'mid'):'low';
+if(level==='high'){c.ins='in';S.mine=c}
+if(level==='mid'){c.ins='ask';S.ask=true;S.pend=c}
+if(level!=='low')S.faded=false;
+strip();cmts();layout();
+$('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:RM?'auto':'smooth'});
+if(level==='high')setTimeout(join,RM?0:800)}
+/* 作业墙与作业详情 */
+const FL={all:'全部',near:'和我相近',col:'有色号',pit:'有踩坑'};
+const QCH=['用的什么色号','手法和顺序','持妆如何','适合什么条件'];
+const RP={'用的什么色号':'就是原作里的 03 和 05，没有换。','手法和顺序':'先打底，再眼尾，最后眼头点闪，顺序和原作一致。','持妆如何':'一整天基本没掉，午后眼尾有一点点晕。','适合什么条件':'我是混油皮，干皮的话打底可以多按压一会儿。'};
+const tgs=w=>[...w.tg,w.col].filter(Boolean).join(' · ');
+function mineW(){const c=S.mine;return{mine:1,n:'我',c:'#FF2442',p:c.img,crop:c.crop,tg:S.cond.slice(),col:S.col,q:c.t||'分享了一份成果图',use:S.col?S.col+'，照着原作做的。':'照着原作做的。',pit:'',h:150,qa:c.qa||(c.qa=[])}}
+const allW=()=>(S.joined&&S.mine?[mineW()]:[]).concat(W);
+function card(w,i){return`<button class="wc" data-act="open" data-i="${i}">${w.mine?'<span class="mine">我的</span>':''}<span class="im" style="height:${w.h}px">${eye(w.p,w.crop)}</span><span class="tx">${esc(w.q)}</span><span class="cd">${esc(tgs(w))}</span><span class="ft"><span class="av" style="background:${w.c}">${esc(w.n[0])}</span><span>${esc(w.n)}</span>${w.qa.length?`<em>追问 ${w.qa.length}</em>`:''}</span></button>`}
+function wall(){
+const ks=['all',...(S.cond.length?['near']:[]),'col','pit'];
+if(!ks.includes(S.filter))S.filter='all';
+$('#fl').innerHTML=ks.map(k=>`<button class="chip" data-f="${k}" aria-pressed="${S.filter===k}">${FL[k]}</button>`).join('');
+$('#wTitle').textContent='作业墙 · '+(BASE+(S.joined?1:0));
+const L=allW().filter(w=>S.filter==='all'||(S.filter==='near'&&(w.mine||w.tg.some(x=>S.cond.includes(x))))||(S.filter==='col'&&w.col)||(S.filter==='pit'&&w.pit));
+S.list=L;const c=[[],[]],h=[0,0];
+L.forEach((w,i)=>{const k=h[0]<=h[1]?0:1;h[k]+=w.h+96;c[k].push(card(w,i))});
+$("#col1").innerHTML=c[0].join('')||'<div class="empty">没有符合条件的作业，换个筛选看看</div>';$("#col2").innerHTML=c[1].join('')}
+function imgView(w){
+if(S.view==='work')return eye(w.p,w.crop)+'<span class="lb" style="left:10px">作业</span>';
+if(S.view==='orig')return eye(0)+'<span class="lb" style="left:10px">原作</span>';
+return eye(0)+`<div class="top" id="top">${eye(w.p)}</div><div class="hd" id="hd"></div><span class="lb" style="left:10px">作业</span><span class="lb" style="right:10px">原作</span><input type="range" id="rg" min="5" max="95" value="50" aria-label="拖动对比作业和原作">`}
+function qh(q,i){return`<div class="q"><small>${q.me?'我 · 刚刚':'一位同伴'}${q.me?`<button class="chip" data-uq="${i}">撤回</button>`:''}</small>${esc(q.t)}${q.a?`<div class="a">${esc(S.list[S.cur].n)}：${esc(q.a)}</div>`:''}</div>`}
+function dtl(){
+const w=S.list[S.cur];if(!w)return;
+const st=$('#dBody').scrollTop;
+$('#dTitle').textContent=`第 ${S.cur+1} / ${S.list.length} 份`;
+$('#dPrev').disabled=S.cur===0;$('#dNext').disabled=S.cur>=S.list.length-1;
+$('#qIn').disabled=!!w.mine;$('#qIn').placeholder=w.mine?'这是你自己的作业':'针对这份作业问一句';$('#qSnd').disabled=true;$('#qIn').value='';
+const qa=w.qa;
+$('#dBody').innerHTML=`<div class="dsw"><span class="av" style="background:${w.c}">${esc(w.n[0])}</span><div class="who"><b>${esc(w.n)}<span class="tag">同题实践者</span></b><small>${esc(tgs(w)||'未填写条件')}</small></div></div>
+<div class="seg2" role="group" aria-label="查看方式">${[['work','作业'],['orig','原作'],['cmp','对比']].map(([v,t])=>`<button class="chip" data-v="${v}" aria-pressed="${S.view===v}">${t}</button>`).join('')}</div>
+<div class="dimg">${imgView(w)}</div>
+<div class="blk"><h3>心得</h3><p>${esc(w.q)}</p></div>
+${w.use?`<div class="blk"><h3>我用的</h3><p>${esc(w.use)}</p></div>`:''}${w.pit?`<div class="blk"><h3>踩坑</h3><p>${esc(w.pit)}</p></div>`:''}
+<div class="blk qs"><h3>复刻追问${qa.length?' · '+qa.length:''}</h3><div class="pill">${QCH.map(q=>`<button class="chip" data-qc="${q}">${q}</button>`).join('')}</div>${qa.map(qh).join('')||'<p style="font-size:13px;color:var(--ink3)">还没有人追问，点上面的问题试试</p>'}<p style="font-size:12px;color:var(--ink3);margin-top:8px">回复通过评论通知提醒，不新增消息通道</p></div>`;
+$('#dBody').scrollTop=st;
+const rg=$('#rg');if(rg)rg.oninput=()=>{const v=+rg.value;$('#top').style.clipPath=`inset(0 ${100-v}% 0 0)`;$('#hd').style.left=v+'%'}}
+function openD(i){S.cur=i;S.view='work';dtl();$('#dBody').scrollTop=0;$('#dtl').classList.add('on')}
+function openWall(){wall();$('#wall').classList.add('on')}
+function closePages(){$('#dtl').classList.remove('on');$('#wall').classList.remove('on')}
+function ask(t){
+const w=S.list[S.cur];if(!t||w.mine)return;
+const q={t,me:1};w.qa.push(q);dtl();
+setTimeout(()=>{if(!w.qa.includes(q))return;q.a=RP[t]||'谢谢你的提问，我晚点补充细节。';if(S.list[S.cur]===w&&$('#dtl').classList.contains('on'))dtl();toast(w.n+' 回复了你的追问')},1500)}
+/* 事件 */
+document.addEventListener('click',e=>{
+const b=e.target.closest('[data-act],[data-q],[data-k],[data-c],[data-d],[data-f],[data-v],[data-qc],[data-uq]');
+if(!b)return;const d=b.dataset;
+if(d.act==='wall')openWall();
+else if(d.act==='undo')undo();
+else if(d.act==='accept'){const c=S.pend;if(!c)return;c.work=true;c.ins='in';S.mine=c;S.ask=false;cmts();join()}
+else if(d.act==='decline'){if(S.pend)S.pend.ins=null;S.pend=null;S.ask=false;cmts();layout();toast('好的，按普通评论处理')}
+else if(d.act==='work'){const L=allW();S.list=L;openD(d.i==='m'?0:L.findIndex(w=>w===W[+d.i]))}
+else if(d.act==='open')openD(+d.i);
+else if(d.q!==undefined){$('#ta').value=d.q;checkSnd()}
+else if(d.k!==undefined){S.img=S.img===+d.k?-1:+d.k;buildCompose()}
+else if(d.c!==undefined){S.col=S.col===d.c?'':d.c;buildCompose()}
+else if(d.d!==undefined){S.cond=S.cond.includes(d.d)?S.cond.filter(x=>x!==d.d):[...S.cond,d.d];buildCompose()}
+else if(d.f!==undefined){S.filter=d.f;wall()}
+else if(d.v!==undefined){S.view=d.v;dtl()}
+else if(d.qc!==undefined)ask(d.qc);
+else if(d.uq!==undefined){const w=S.list[S.cur];w.qa.splice(+d.uq,1);dtl();toast('已撤回追问')}});
+$('#inp').onclick=()=>openCompose(false);
+$('#shx').onclick=closeCompose;$('#scrim').onclick=closeCompose;
+$('#ta').oninput=checkSnd;$('#snd').onclick=send;
+$('#crop').onclick=()=>{S.crop=!S.crop;buildCompose()};
+$('#more').onclick=()=>{const o=$('#more').getAttribute('aria-expanded')!=='true';$('#more').setAttribute('aria-expanded',o);$('#opt').hidden=!o};
+$('#wBack').onclick=closePages;
+$('#wHw').onclick=()=>{closePages();openCompose(true)};
+$('#orig').onclick=()=>{closePages();$('#scroll').scrollTo({top:0})};
+$('#dBack').onclick=()=>$('#dtl').classList.remove('on');
+$('#dPrev').onclick=()=>{S.cur--;S.view='work';dtl()};
+$('#dNext').onclick=()=>{S.cur++;S.view='work';dtl()};
+$('#qIn').oninput=()=>{$('#qSnd').disabled=!$('#qIn').value.trim()};
+$('#qSnd').onclick=()=>ask($('#qIn').value.trim());
+$('#qIn').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)ask($('#qIn').value.trim())};
+$('#fade').onclick=()=>{S.faded=!S.faded;if(S.faded)closePages();refresh();toast(S.faded?'14 天内没有新作业：入口条降为一行文字':'已恢复')};
+$('#rst').onclick=()=>reset(true);
+$('#auto').onclick=()=>auto();
+$('#rp').onclick=()=>{S.iso=true;layout();release(1800)};
+$('#try').onclick=()=>{reset(true);$('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:'smooth'});toast('点底部输入框，发一张你的成果图')};
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('#sheet').classList.contains('on'))closeCompose();else if($('#dtl').classList.contains('on'))$('#dtl').classList.remove('on');else closePages()});
+let isoT=0,runId=0;
+function release(ms){const t=++isoT;setTimeout(()=>{if(t===isoT){S.iso=false;layout()}},ms)}
+const IDLE='也可以自己玩：在右侧评论区发一张成果图，看下面的关系怎么变';
+function nar(t){const n=$('#nar');n.className=t?'nar':'nar idle';n.textContent=t||IDLE}
+function reset(intro){
+runId++;isoT++;Object.assign(S,{mode:'wall',iso:true,joined:false,ask:false,faded:false,mine:null,pend:null,cond:[],col:'',filter:'all'});
+S.cm=C0.map(x=>({...x}));closeCompose();closePages();$('#scroll').scrollTop=0;nar('');
+$('#wrap').classList.remove('auto');$('#auto').textContent='看 30 秒演示';refresh();
+if(intro)release(1600);else{S.iso=false;layout()}}
+/* 自动演示：带旁白，按主线走一遍，再看作业墙与对照原作 */
+async function auto(){
+if($('#wrap').classList.contains('auto')){reset(true);return}
+reset(false);const id=runId,w=async ms=>{await sleep(ms);return id===runId};
+$('#wrap').classList.add('auto');$('#auto').textContent='停止演示';
+S.iso=true;layout();nar('互动前：几百人看同一条笔记，彼此不认识，每个人只和笔记相连');
+if(!await w(3200))return;
+S.iso=false;layout();nar('现在有了作业墙：已经有 126 位读者做了同款并交了作业，他们连成一圈，你还在圈外');
+$('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:'smooth'});
+if(!await w(3200))return;
+openCompose(false);nar('你照着做完，在评论区发一张成果图，和平时发评论一样');
+if(!await w(800))return;
+for(const ch of '跟着做了，眼尾拉长一点更好看'){$('#ta').value+=ch;checkSnd();if(!await w(55))return}
+if(!await w(300))return;S.img=0;buildCompose();
+if(!await w(500))return;$('#more').click();
+if(!await w(400))return;$('[data-d="混油皮"]').click();
+if(!await w(300))return;$('[data-c="03 暖棕"]').click();
+if(!await w(900))return;nar('发送后，系统认出这是一份作业，自动归入这条笔记的作业墙');$('#snd').click();
+if(!await w(2200))return;nar('你和另外 126 位同伴一起做了这个妆。没有加好友，也没有同伴列表');
+if(!await w(3600))return;
+openWall();nar('点开作业墙，可以翻看大家的作业');
+if(!await w(2400))return;
+S.filter='near';wall();nar('筛出和你条件相近的人，参考她们的做法');
+if(!await w(2400))return;
+openD(0);nar('点进一份作业，可以问细节，也可以和原作对照');
+if(!await w(1800))return;
+S.view='cmp';dtl();nar('拖动中间的线，对照作业和原作');
+if(!await w(2800))return;
+closePages();nar('');$('#wrap').classList.remove('auto');$('#auto').textContent='看 30 秒演示';toast('演示结束，现在可以自己试试');}
+function fit(){
+const k=Math.min(1,(innerHeight-32)/864,innerWidth>880?(innerWidth-340-44-48)/410:(innerWidth-32)/410);
+$('#phone').style.transform=`scale(${k})`;$('#wrap').style.width=410*k+'px';$('#wrap').style.height=864*k+'px'}
+addEventListener('resize',fit);
+$('#cover').innerHTML=eye(0)+'<div style="position:absolute;inset:45% 0 0 0;background:linear-gradient(transparent,rgba(70,36,20,.6))"></div><span class="pg">1/3</span><div class="cvt"><b>秋日奶茶眼妆</b><span>03 暖棕 + 05 焦糖</span></div><div class="sw"><i style="background:#CFA27A"></i><i style="background:#8E5C3B"></i><i style="background:#F5DDB0"></i></div>';
+$('#oth').innerHTML=eye(0);
+fit();refresh();release(1600);</script>
+</body>
+</html>
