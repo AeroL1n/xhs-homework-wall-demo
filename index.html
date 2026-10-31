@@ -171,9 +171,6 @@ textarea,input{font:inherit;color:inherit}
 .orig .th svg{width:100%;height:100%;display:block}
 .orig span{flex:1;min-width:0;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .orig em{font-style:normal;font-size:12px;color:var(--peer);border:1px solid var(--peer);border-radius:4px;padding:0 5px}
-.fl{flex:none;display:flex;gap:8px;padding:10px 14px;background:#fff;overflow-x:auto;scrollbar-width:none}
-.fl::-webkit-scrollbar{display:none}
-.fl .chip{flex:none}
 .pbody{flex:1;overflow-y:auto;scrollbar-width:none;padding:10px 10px 90px}
 .pbody::-webkit-scrollbar{display:none}
 .mas{display:flex;gap:8px;align-items:flex-start}
@@ -291,7 +288,6 @@ textarea,input{font:inherit;color:inherit}
 <div class="page" id="wall">
 <div class="ph2"><button class="ib" id="wBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><b id="wTitle">作业墙</b><button class="act" id="wHw">交作业</button></div>
 <button class="orig" id="orig"><div class="th" id="oth"></div><span>秋日奶茶眼妆｜三步搞定，通勤不显肿</span><em>原作</em></button>
-<div class="fl" id="fl"></div>
 <div class="pbody" id="wBody"><div class="mas"><div class="col" id="col1"></div><div class="col" id="col2"></div></div></div>
 </div>
 <div class="page" id="dtl">
@@ -363,7 +359,7 @@ const QF_P=['好看，已收藏','这是哪款眼影盘？'];
 const ITEMS=['03 暖棕','05 焦糖','细闪','眼线笔'];
 const BASE=126;
 /* 全局状态 */
-const S={mode:'wall',iso:true,joined:false,ask:false,faded:false,mine:null,cmp:'',chg:[],hinted:false,filter:'all',cur:0,list:[],view:'work',hw:false,img:-1,ringOrder:[]};
+const S={mode:'wall',iso:true,joined:false,ask:false,faded:false,mine:null,cmp:'',chg:[],hinted:false,cur:0,list:[],view:'work',hw:false,img:-1,ringOrder:[]};
 /* 关系视图：16 个点，0-8 是已交作业的人，9-14 是只读不交的读者，15 是“我” */
 const NS='http://www.w3.org/2000/svg',dg=$('#dg'),CX=150,CY=150,R=80;
 const SC=[[40,38],[262,28],[274,112],[272,214],[198,274],[104,274],[30,240],[20,96],[150,284],[70,70],[232,64],[262,160],[150,26],[48,206],[230,246],[28,150]];
@@ -476,7 +472,6 @@ strip();cmts();layout();
 $('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:RM?'auto':'smooth'});
 if(level==='high')setTimeout(join,RM?0:800/SP)}
 /* 作业墙与作业详情 */
-const FL={all:'全部',same:'照做',diff:'有改动',pit:'有踩坑'};
 const QCH=['用的什么色号','手法和顺序','持妆如何','适合什么条件'];
 const RP={'用的什么色号':'就是原作里的 03 和 05，没有换。','手法和顺序':'先打底，再眼尾，最后眼头点闪，顺序和原作一致。','持妆如何':'一整天基本没掉，午后眼尾有一点点晕。','适合什么条件':'我是混油皮，干皮的话打底可以多按压一会儿。'};
 const cdTag=w=>w.cmp==='diff'?'改了 '+w.chg.map(x=>x[0]).join('、'):'';
@@ -486,14 +481,11 @@ function mineW(){const c=S.mine;return{mine:1,n:'我',c:'#FF2442',p:c.img,cmp:c.
 const allW=()=>(S.joined&&S.mine?[mineW()]:[]).concat(W);
 function card(w,i){const tg=cdTag(w);return`<button class="wc" data-act="open" data-i="${i}">${w.mine?'<span class="mine">我的</span>':''}<span class="im" style="height:${w.h}px">${eye(w.p)}</span><span class="tx">${esc(w.q)}</span>${tg?`<span class="cd">${esc(tg)}</span>`:''}<span class="ft"><span class="av" style="background:${w.c}">${esc(w.n[0])}</span><span>${esc(w.n)}</span>${w.qa.length?`<em>追问 ${w.qa.length}</em>`:''}</span></button>`}
 function wall(){
-const ks=['all','same','diff','pit'];
-if(!ks.includes(S.filter))S.filter='all';
-$('#fl').innerHTML=ks.map(k=>`<button class="chip" data-f="${k}" aria-pressed="${S.filter===k}">${FL[k]}</button>`).join('');
 $('#wTitle').textContent='作业墙 · '+(BASE+(S.joined?1:0));
-const L=allW().filter(w=>S.filter==='all'||(S.filter==='same'&&w.cmp==='same')||(S.filter==='diff'&&w.cmp==='diff')||(S.filter==='pit'&&w.pit));
+const L=allW();
 S.list=L;const c=[[],[]],h=[0,0];
 L.forEach((w,i)=>{const k=h[0]<=h[1]?0:1;h[k]+=w.h+96;c[k].push(card(w,i))});
-$("#col1").innerHTML=c[0].join('')||'<div class="empty">没有符合条件的作业，换个筛选看看</div>';$("#col2").innerHTML=c[1].join('')}
+$("#col1").innerHTML=c[0].join('');$("#col2").innerHTML=c[1].join('')}
 function imgView(w){
 const btn=`<button class="cmpb" data-v="toggle">${S.view==='cmp'?'收起对照':'对照原作'}</button>`;
 if(S.view!=='cmp')return eye(w.p)+'<span class="lb" style="left:10px">作业</span>'+btn;
@@ -523,7 +515,7 @@ const q={t,me:1};w.qa.push(q);dtl();
 setTimeout(()=>{if(!w.qa.includes(q))return;q.a=(t==='用的什么色号'&&w.cmp==='diff')?'换了 '+w.chg.map(x=>x[0]+' → '+x[1]).join('、')+'，其余和原作一样。':(RP[t]||'谢谢你的提问，我晚点补充细节。');if(S.list[S.cur]===w&&$('#dtl').classList.contains('on'))dtl();toast(w.n+' 回复了你的追问')},1500)}
 /* 事件 */
 document.addEventListener('click',e=>{
-const b=e.target.closest('[data-act],[data-q],[data-k],[data-m],[data-g],[data-f],[data-v],[data-qc],[data-uq]');
+const b=e.target.closest('[data-act],[data-q],[data-k],[data-m],[data-g],[data-v],[data-qc],[data-uq]');
 if(!b)return;const d=b.dataset;
 if(d.act==='wall')openWall();
 else if(d.act==='undo')undo();
@@ -534,7 +526,6 @@ else if(d.q!==undefined){const ta=$('#hws').classList.contains('on')?$('#hta'):$
 else if(d.k!==undefined){S.img=S.img===+d.k?-1:+d.k;buildCompose()}
 else if(d.m!==undefined){S.cmp=S.cmp===d.m?'':d.m;if(S.cmp!=='diff')S.chg=[];buildCompose()}
 else if(d.g!==undefined){S.chg=S.chg.includes(d.g)?S.chg.filter(x=>x!==d.g):[...S.chg,d.g];buildCompose()}
-else if(d.f!==undefined){S.filter=d.f;wall()}
 else if(d.v!==undefined){S.view=S.view==='cmp'?'work':'cmp';dtl()}
 else if(d.qc!==undefined)ask(d.qc);
 else if(d.uq!==undefined){const w=S.list[S.cur];w.qa.splice(+d.uq,1);dtl();toast('已撤回追问')}});
@@ -565,7 +556,7 @@ function release(ms){const t=++isoT;setTimeout(()=>{if(t===isoT){S.iso=false;lay
 const IDLE='也可以自己玩：在右侧评论区发一张成果图，看下面的关系怎么变';
 function nar(t){const n=$('#nar');n.className=t?'nar':'nar idle';n.textContent=t||IDLE}
 function reset(intro){
-runId++;isoT++;Object.assign(S,{mode:'wall',iso:true,joined:false,sending:false,ask:false,faded:false,mine:null,pend:null,cmp:'',chg:[],hinted:false,filter:'all'});
+runId++;isoT++;Object.assign(S,{mode:'wall',iso:true,joined:false,sending:false,ask:false,faded:false,mine:null,pend:null,cmp:'',chg:[],hinted:false});
 S.cm=C0.map(x=>({...x}));closeCompose();closePages();$('#scroll').scrollTop=0;nar('');
 $('#wrap').classList.remove('auto');$('#auto').textContent='看 40 秒演示';$('#finger').style.opacity=0;$('#finger').classList.remove('down');refresh();
 if(intro)release(1600);else{S.iso=false;layout()}}
@@ -603,8 +594,8 @@ nar('看左边：你的点并进了圈，和其他实践者连成一圈');
 {const d=$('.dia');d.classList.remove('hl');void d.offsetWidth;d.classList.add('hl')}
 await w(2800);
 nar('点入口条，进入作业墙');await tap('.strip');await w(1400);
-nar('筛出换了做法的作业，看别人哪里改了');await tap('#fl [data-f="diff"]');await w(1400);
-nar('点进一份作业');await tap('.wc');await w(1300);
+nar('翻看大家的作业：卡片上直接写着谁改了什么');await view('.wc[data-i="3"]','#wBody');await w(1200);
+nar('点进一份换了做法的作业');await tap('.wc[data-i="3"]');await w(1300);
 nar('点「对照原作」，再拖动中间的线');await tap('.cmpb');await w(700);
 {const rg=pick('#rg'),r=pick('.dimg').getBoundingClientRect(),y=r.top+r.height/2,X=v=>r.left+r.width*v/100;
 await at(X(50),y,600);await down();
