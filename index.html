@@ -35,7 +35,7 @@ textarea,input{font:inherit;color:inherit}
 .nd.done i{background:#CFE3EC;color:var(--peer)}
 .nd.on i{background:var(--peer);color:#fff;transform:scale(1.12)}
 .nd.on{color:var(--ink);font-weight:600}
-.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+.ctl{display:grid;grid-template-columns:1.25fr .8fr 1.15fr;gap:8px;margin:4px 0 10px}
 .btn{min-height:44px;border-radius:12px;background:#F0F1F4;font-size:14px;font-weight:600;transition:background .15s}
 .btn:hover{background:#E6E8EC}
 .btn[aria-pressed=true]{background:#222;color:#fff}
@@ -212,6 +212,12 @@ textarea,input{font:inherit;color:inherit}
 .dbar input{flex:1;height:38px;border-radius:19px;border:0;background:#F5F5F5;padding:0 14px;font-size:14px;outline-offset:1px}
 .dbar .snd{height:38px}
 .fly{position:absolute;z-index:70;width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;pointer-events:none;box-shadow:0 4px 14px rgba(255,36,66,.5)}
+.finger{position:absolute;z-index:96;left:195px;top:600px;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(20,20,20,.3);border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:transform .12s,background .12s}
+.finger.down{transform:scale(.78);background:rgba(255,36,66,.5)}
+.finger.down:after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,36,66,.6);animation:rip .5s ease-out}
+@keyframes rip{from{transform:scale(.6);opacity:1}to{transform:scale(1.5);opacity:0}}
+.dia.hl{animation:dh 2.2s ease-out}
+@keyframes dh{0%{box-shadow:0 0 0 0 rgba(255,36,66,.55)}30%{box-shadow:0 0 0 6px rgba(255,36,66,.35)}100%{box-shadow:0 0 0 0 rgba(255,36,66,0)}}
 .toast{position:absolute;left:50%;bottom:92px;transform:translate(-50%,12px);z-index:60;background:rgba(34,34,34,.92);color:#fff;font-size:13px;line-height:1.45;padding:9px 14px;border-radius:10px;max-width:300px;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 #dg .cl{stroke:#C9CED6;stroke-width:1;opacity:.75;transition:opacity .6s,stroke .6s}
@@ -236,14 +242,14 @@ textarea,input{font:inherit;color:inherit}
 <aside class="panel" aria-label="演示控制与关系视图">
 <h1>作业墙：让陌生读者变成同伴</h1>
 <p class="lead">在种草笔记的评论区，把「跟着做过」的人归到一起。大家不用加好友，只因为做了同一件事，就能互相参考、追问细节。</p>
-<div class="row2"><button class="btn pri" id="auto">看 30 秒演示</button><button class="btn" id="try">自己试试</button></div>
+<div class="row2"><button class="btn pri" id="auto">看 40 秒演示</button><button class="btn" id="try">自己试试</button></div>
 <div class="nar idle" id="nar" aria-live="polite">也可以自己玩：在右侧评论区发一张成果图，看下面的关系怎么变</div>
 <div class="dia"><svg id="dg" viewBox="0 0 300 300" role="img" aria-label="关系视图：读者与笔记、读者之间的连线"></svg>
 <button class="rp" id="rp">回看互动前</button>
 <div class="lg"><span><i style="background:#B9BEC8"></i>读者</span><span><i style="background:var(--peer)"></i>同题实践者</span><span><i style="background:var(--red)"></i>我</span></div></div>
 <div class="cap" aria-live="polite"><b id="capT"></b><p id="capD"></p></div>
 <div class="trk" id="trk"><div class="nd"><i>1</i>圈外读者<small>互动前</small></div><div class="nd"><i>2</i>发出作业<small>&nbsp;</small></div><div class="nd"><i>3</i>同题实践者<small>互动后</small></div></div>
-<div class="ctl"><button class="btn" id="fade" aria-pressed="false">模拟 14 天后</button><button class="btn" id="rst">重置</button></div>
+<div class="ctl"><button class="btn" id="fade" aria-pressed="false">模拟 14 天后</button><button class="btn" id="rst">重置</button><button class="btn" id="spd" aria-pressed="false">0.5 倍慢放</button></div>
 <details class="aid"><summary>演示辅助：填入示例文案</summary><div class="qf" id="qf"></div></details>
 <details class="note"><summary>说明：术语与识别规则</summary>
 <p><b>作业</b>：跟着原笔记做完后，在评论区发的成果图、心得或踩坑。<br><b>同题实践者</b>：在同一条笔记下交过作业的人，只在这条笔记里成立，不加好友，不进主页。界面上用昵称旁的小标「交过作业」表示。<br><b>识别规则（演示用）</b>：带图且写了「做了、试了、跟着、复刻、踩坑」，直接入墙；只有图，评论下给一个「加入作业墙」，不点就是普通评论；没有图，当普通评论。<br>关系视图里只画了 10 位，真实数字是 126 位。示例笔记与人物、图片均为虚构。</p></details>
@@ -294,6 +300,7 @@ textarea,input{font:inherit;color:inherit}
 <div class="dbar"><input id="qIn" placeholder="针对这份作业问一句" aria-label="复刻追问"><button class="snd" id="qSnd" disabled>发送</button></div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div class="finger" id="finger"></div>
 <div class="home"></div>
 </div></div></div>
 </div>
@@ -301,7 +308,8 @@ textarea,input{font:inherit;color:inherit}
 'use strict';
 const $=s=>document.querySelector(s);
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let SP=1;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms/SP));
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* 眼妆插画：[肤色, 肤色2, 眼影1, 眼影2, 闪片, 眼线, 眉色, 眼尾上扬] */
 const PAL=[
@@ -392,7 +400,7 @@ dg.classList.toggle('w',wall);dg.classList.toggle('j',joined);
 ring.style.opacity=wall?1:0;
 cl.forEach((l,i)=>{const inR=order.includes(i);l.style.opacity=S.faded&&!S.iso?.3:inR?.22:.75;l.style.stroke=inR?'#2B6A88':'#C9CED6';l.style.strokeDasharray=S.faded&&!S.iso?'2 3':'none'});
 const k=capKey();$('#capT').textContent=CAP[k][0];$('#capD').textContent=CAP[k][1];
-const idx=k==='joined'?2:k==='ask'?1:0;
+const idx=k==='joined'?2:(k==='ask'||S.sending)?1:0;
 [...$('#trk').children].forEach((e,i)=>{e.className='nd'+(i<idx?' done':i===idx?' on':'')});
 $('#fade').setAttribute('aria-pressed',S.faded);run()}
 /* 评论区与入口条 */
@@ -440,14 +448,14 @@ if(RM||!from||!to){res();return}
 const sc=$('#screen').getBoundingClientRect(),k=sc.width/390,a=from.getBoundingClientRect(),b=to.getBoundingClientRect();
 const ax=(a.left-sc.left)/k,ay=(a.top-sc.top)/k,bx=(b.left-sc.left)/k,by=(b.top-sc.top)/k;
 const f=document.createElement('span');f.className='fly';f.textContent='我';f.style.left=ax+'px';f.style.top=ay+'px';$('#screen').appendChild(f);
-const an=f.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${(bx-ax)/2}px,${(by-ay)/2-30}px) scale(1.35)`,offset:.5},{transform:`translate(${bx-ax}px,${by-ay}px) scale(.9)`}],{duration:720,easing:'cubic-bezier(.5,0,.2,1)'});
+const an=f.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${(bx-ax)/2}px,${(by-ay)/2-30}px) scale(1.35)`,offset:.5},{transform:`translate(${bx-ax}px,${by-ay}px) scale(.9)`}],{duration:720/SP,easing:'cubic-bezier(.5,0,.2,1)'});
 an.onfinish=()=>{f.remove();res()}})}
 async function join(){
-S.joined=true;S.ask=false;S.faded=false;if(S.mine)S.mine.work=true;strip();cmts();layout();
+S.joined=true;S.sending=false;S.ask=false;S.faded=false;if(S.mine)S.mine.work=true;strip();cmts();layout();
 await fly(document.querySelector('.cm.mine .av'),$('#meAv'));
 const m=$('#meAv');if(m)m.classList.remove('hide');
 const s=document.querySelector('.strip');if(s)s.classList.add('bump');
-setTimeout(pulse,RM?0:350);
+setTimeout(pulse,RM?0:350/SP);
 setTimeout(()=>{if(S.mine&&S.mine.ins==='in'){S.mine.ins='done';cmts()}},6000)}
 function undo(){
 S.joined=false;S.ask=false;if(S.mine){S.mine.work=false;S.mine.ins=null}S.mine=null;
@@ -461,12 +469,12 @@ const kw=/做了|试了|跟着|复刻|踩坑|打卡/.test(t);
 closeCompose();
 S.cm.unshift(c);
 const level=S.mode==='wall'&&has?(kw||S.hw?'high':'mid'):'low';
-if(level==='high'){c.ins='in';S.mine=c}
+if(level==='high'){c.ins='in';S.mine=c;S.sending=true}
 if(level==='mid'){c.ins='ask';S.ask=true;S.pend=c}
 if(level!=='low')S.faded=false;
 strip();cmts();layout();
 $('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:RM?'auto':'smooth'});
-if(level==='high')setTimeout(join,RM?0:800)}
+if(level==='high')setTimeout(join,RM?0:800/SP)}
 /* 作业墙与作业详情 */
 const FL={all:'全部',same:'照做',diff:'有改动',pit:'有踩坑'};
 const QCH=['用的什么色号','手法和顺序','持妆如何','适合什么条件'];
@@ -512,7 +520,7 @@ function closePages(){$('#dtl').classList.remove('on');$('#wall').classList.remo
 function ask(t){
 const w=S.list[S.cur];if(!t||w.mine)return;
 const q={t,me:1};w.qa.push(q);dtl();
-setTimeout(()=>{if(!w.qa.includes(q))return;q.a=RP[t]||'谢谢你的提问，我晚点补充细节。';if(S.list[S.cur]===w&&$('#dtl').classList.contains('on'))dtl();toast(w.n+' 回复了你的追问')},1500)}
+setTimeout(()=>{if(!w.qa.includes(q))return;q.a=(t==='用的什么色号'&&w.cmp==='diff')?'换了 '+w.chg.map(x=>x[0]+' → '+x[1]).join('、')+'，其余和原作一样。':(RP[t]||'谢谢你的提问，我晚点补充细节。');if(S.list[S.cur]===w&&$('#dtl').classList.contains('on'))dtl();toast(w.n+' 回复了你的追问')},1500)}
 /* 事件 */
 document.addEventListener('click',e=>{
 const b=e.target.closest('[data-act],[data-q],[data-k],[data-m],[data-g],[data-f],[data-v],[data-qc],[data-uq]');
@@ -548,6 +556,7 @@ $('#qIn').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)ask($('#qIn').value.t
 $('#fade').onclick=()=>{S.faded=!S.faded;if(S.faded)closePages();refresh();toast(S.faded?'14 天内没有新作业：入口条降为一行文字':'已恢复')};
 $('#rst').onclick=()=>reset(true);
 $('#auto').onclick=()=>auto();
+$('#spd').onclick=()=>{SP=SP===1?.5:1;$('#spd').setAttribute('aria-pressed',SP!==1)};
 $('#rp').onclick=()=>{S.iso=true;layout();release(1800)};
 $('#try').onclick=()=>{reset(true);$('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:'smooth'});toast('点底部输入框，发一张你的成果图')};
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('#sheet').classList.contains('on')||$('#hws').classList.contains('on'))closeCompose();else if($('#dtl').classList.contains('on'))$('#dtl').classList.remove('on');else closePages()});
@@ -556,38 +565,66 @@ function release(ms){const t=++isoT;setTimeout(()=>{if(t===isoT){S.iso=false;lay
 const IDLE='也可以自己玩：在右侧评论区发一张成果图，看下面的关系怎么变';
 function nar(t){const n=$('#nar');n.className=t?'nar':'nar idle';n.textContent=t||IDLE}
 function reset(intro){
-runId++;isoT++;Object.assign(S,{mode:'wall',iso:true,joined:false,ask:false,faded:false,mine:null,pend:null,cmp:'',chg:[],hinted:false,filter:'all'});
+runId++;isoT++;Object.assign(S,{mode:'wall',iso:true,joined:false,sending:false,ask:false,faded:false,mine:null,pend:null,cmp:'',chg:[],hinted:false,filter:'all'});
 S.cm=C0.map(x=>({...x}));closeCompose();closePages();$('#scroll').scrollTop=0;nar('');
-$('#wrap').classList.remove('auto');$('#auto').textContent='看 30 秒演示';refresh();
+$('#wrap').classList.remove('auto');$('#auto').textContent='看 40 秒演示';$('#finger').style.opacity=0;$('#finger').classList.remove('down');refresh();
 if(intro)release(1600);else{S.iso=false;layout()}}
 /* 自动演示：带旁白，按主线走一遍，再看作业墙与对照原作 */
 async function auto(){
 if($('#wrap').classList.contains('auto')){reset(true);return}
-reset(false);const id=runId,w=async ms=>{await sleep(ms);return id===runId};
+reset(false);const id=runId;
+const w=async ms=>{await sleep(ms);if(id!==runId)throw 0};
+const F=$('#finger'),scr=$('#screen');
+const loc=(x,y)=>{const s=scr.getBoundingClientRect(),k=s.width/390;return[(x-s.left)/k,(y-s.top)/k]};
+const mid=n=>{const r=n.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2]};
+const at=async(x,y,ms=650)=>{const[a,b]=loc(x,y);F.style.transition=`left ${ms/SP}ms ease-in-out,top ${ms/SP}ms ease-in-out,opacity .2s,transform .12s,background .12s`;F.style.left=a+'px';F.style.top=b+'px';F.style.opacity=1;await w(ms)};
+const down=async()=>{F.classList.add('down');await w(130)};
+const up=async()=>{await w(130);F.classList.remove('down')};
+const pick=s=>{const n=$(s);if(!n)throw new Error('演示找不到元素 '+s);return n};
+const tap=async(s,click=true)=>{await w(250);const n=pick(s),[x,y]=mid(n);await at(x,y);await down();if(click)n.click();await up()};
+const view=async(s,box)=>{const n=pick(s),b=$(box),r=n.getBoundingClientRect(),c=b.getBoundingClientRect();
+if(r.top<c.top+20||r.bottom>c.bottom-90){b.scrollBy({top:r.top-c.top-c.height*.4,behavior:RM?'auto':'smooth'});await w(700)}};
 $('#wrap').classList.add('auto');$('#auto').textContent='停止演示';
+try{
 S.iso=true;layout();nar('互动前：几百人看同一条笔记，彼此不认识，每个人只和笔记相连');
-if(!await w(3200))return;
+await w(2600);
 S.iso=false;layout();nar('现在有了作业墙：已经有 126 位读者做了同款并交了作业，他们连成一圈，你还在圈外');
 $('#scroll').scrollTo({top:$('#cmhd').offsetTop-8,behavior:'smooth'});
-if(!await w(3200))return;
-openCompose(false);nar('你照着做完，在评论区发一张成果图，和平时发评论一样');
-if(!await w(800))return;
-for(const ch of '跟着做了，眼尾拉长一点更好看'){$('#ta').value+=ch;checkSnd();if(!await w(55))return}
-if(!await w(300))return;S.img=0;buildCompose();
-if(!await w(900))return;nar('发送后，系统认出这是一份作业，自动归入这条笔记的作业墙');$('#snd').click();
-if(!await w(2200))return;nar('你和另外 126 位同伴一起做了。没有加好友，也没有同伴列表');
-if(!await w(3600))return;
-openWall();nar('点开作业墙，可以翻看大家的作业');
-if(!await w(2400))return;
-S.filter='diff';wall();nar('筛出换了做法的作业，看别人哪里改了');
-if(!await w(2400))return;
-openD(0);nar('点进一份作业，可以问细节，也可以和原作对照');
-if(!await w(1800))return;
-S.view='cmp';dtl();nar('点「对照原作」，拖动中间的线，对照作业和原作');
-if(!await w(2800))return;
-step(1);nar('左右滑动，切换上一份、下一份');
-if(!await w(2200))return;
-closePages();nar('');$('#wrap').classList.remove('auto');$('#auto').textContent='看 30 秒演示';toast('演示结束，现在可以自己试试');}
+await w(2600);
+nar('你照着做完了：点评论框，和平时发评论一样');await tap('#inp');await w(500);
+nar('写一句心得');await tap('#ta',false);
+for(const ch of '跟着做了，眼尾拉长一点更好看'){$('#ta').value+=ch;checkSnd();await w(55)}
+await w(300);nar('选一张成果图');await tap('#ph .pt[data-k="0"]');await w(500);
+nar('点发送');await tap('#snd');await w(900);
+nar('系统认出这是一份作业，自动归入作业墙。评论下有「撤回」，随时能退');
+{const b=pick('.cm.mine .ins button'),[x,y]=mid(b);await at(x,y,700)}await w(1400);
+nar('头像飞进入口条，数字加 1，昵称旁出现「交过作业」小标');await w(2400);
+nar('看左边：你的点并进了圈，和其他实践者连成一圈');
+{const d=$('.dia');d.classList.remove('hl');void d.offsetWidth;d.classList.add('hl')}
+await w(2800);
+nar('点入口条，进入作业墙');await tap('.strip');await w(1400);
+nar('筛出换了做法的作业，看别人哪里改了');await tap('#fl [data-f="diff"]');await w(1400);
+nar('点进一份作业');await tap('.wc');await w(1300);
+nar('点「对照原作」，再拖动中间的线');await tap('.cmpb');await w(700);
+{const rg=pick('#rg'),r=pick('.dimg').getBoundingClientRect(),y=r.top+r.height/2,X=v=>r.left+r.width*v/100;
+await at(X(50),y,600);await down();
+const vs=[...Array.from({length:15},(_,i)=>50-i*2),...Array.from({length:22},(_,i)=>22+i*2)];
+for(const v of vs){rg.value=v;rg.dispatchEvent(new Event('input'));const[a,b]=loc(X(v),y);F.style.transition='none';F.style.left=a+'px';F.style.top=b+'px';await w(32)}
+await up()}
+await w(700);
+nar('左右滑动，切换下一份作业');
+{const d=$('#dBody'),r=d.getBoundingClientRect(),y=r.top+r.height*.72,x1=r.left+r.width*.82,x2=r.left+r.width*.18;
+const pe=(t,x)=>d.dispatchEvent(new PointerEvent(t,{bubbles:true,clientX:x,clientY:y,pointerId:5,pointerType:'touch'}));
+await at(x1,y,600);await down();pe('pointerdown',x1);await at(x2,y,500);pe('pointerup',x2);await up()}
+await w(900);
+nar('针对细节问一句：点预设问题就发出，下面有「撤回」');
+await view('[data-qc="用的什么色号"]','#dBody');await tap('[data-qc="用的什么色号"]');await w(2300);
+nar('同伴的回复沿用评论通知，没有私信，也没有加好友');await w(2400);
+nar('看完即走。没有加好友，也没有新列表，接下来轮到你了');
+await tap('#dBack');await w(500);await tap('#wBack');await w(400);
+F.style.opacity=0;
+}catch(e){if(e!==0)throw e;return}
+nar('');$('#wrap').classList.remove('auto');$('#auto').textContent='看 40 秒演示';toast('演示结束，现在可以自己试试')}
 function fit(){
 const k=Math.min(1,(innerHeight-32)/864,innerWidth>880?(innerWidth-340-44-48)/410:(innerWidth-32)/410);
 $('#phone').style.transform=`scale(${k})`;$('#wrap').style.width=410*k+'px';$('#wrap').style.height=864*k+'px'}
